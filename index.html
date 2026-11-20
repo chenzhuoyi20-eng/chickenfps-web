@@ -1,133 +1,120 @@
-<!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | ChickenFPS Chromebook</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-  </head>
-  <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">ChickenFPS Chromebook</div>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="ChickenFPS 是一个由 Unity WebGL 制作的独立战术射击游戏。网页不含广告、跟踪器或可执行文件下载。">
+  <meta name="referrer" content="no-referrer">
+  <title>ChickenFPS · Chromebook 网页版</title>
+  <link rel="icon" href="TemplateData/favicon.ico">
+  <style>
+    :root { color-scheme: dark; --bg:#070b12; --panel:#0e1623; --line:#25364d; --gold:#ffb557; --text:#edf4ff; --muted:#9badc5; --ok:#67d990; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; min-height:100%; margin:0; background:radial-gradient(circle at 50% 0,#14243a 0,#070b12 52%); color:var(--text); font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { display:flex; justify-content:center; padding:18px; }
+    main { width:min(1180px,100%); }
+    header { display:flex; align-items:center; justify-content:space-between; gap:20px; margin:0 0 12px; }
+    h1 { margin:0; color:var(--gold); font-size:clamp(22px,3vw,34px); letter-spacing:.04em; }
+    .badges { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .badge { border:1px solid var(--line); border-radius:999px; padding:5px 10px; color:var(--muted); background:#0a111c; font-size:12px; }
+    .badge.safe { color:var(--ok); }
+    #game-shell { position:relative; overflow:hidden; width:100%; aspect-ratio:16/9; min-height:360px; border:1px solid var(--line); border-radius:14px; background:#020407; box-shadow:0 22px 65px #0009; }
+    #unity-canvas { display:block; width:100%; height:100%; background:#020407; outline:none; }
+    #loading { position:absolute; inset:0; display:grid; place-content:center; gap:14px; text-align:center; background:linear-gradient(#07101de8,#04070ced); }
+    #bar { width:min(460px,72vw); height:12px; border-radius:999px; overflow:hidden; background:#192435; border:1px solid #31435b; }
+    #fill { width:0; height:100%; background:linear-gradient(90deg,#e98c35,var(--gold)); transition:width .15s; }
+    #status { color:var(--muted); }
+    #error { position:absolute; inset:0; display:none; place-content:center; padding:30px; text-align:center; background:#090d14f2; }
+    #error-card { max-width:700px; padding:24px; border:1px solid #714047; border-radius:12px; background:#211217; }
+    #error-message { color:#ffc7c7; overflow-wrap:anywhere; }
+    button { border:1px solid #526984; border-radius:8px; padding:10px 18px; color:white; background:#20334b; font-weight:700; cursor:pointer; }
+    footer { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; padding:12px 3px 0; color:var(--muted); font-size:13px; }
+    footer p { margin:0; }
+    kbd { border:1px solid #45566c; border-bottom-width:2px; border-radius:4px; padding:1px 5px; background:#111b28; color:#dceaff; }
+    @media (max-width:760px) { body{padding:0} header{padding:10px 12px;margin:0} .badges{display:none} #game-shell{border:0;border-radius:0;min-height:100svh;aspect-ratio:auto} footer{display:none} }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>CHICKEN FPS</h1>
+    <div class="badges" aria-label="网站信息">
+      <span class="badge safe">HTTPS 安全连接</span>
+      <span class="badge">无广告</span>
+      <span class="badge">无下载文件</span>
+      <span class="badge">中文 · English · Español</span>
+    </div>
+  </header>
+  <section id="game-shell" aria-label="ChickenFPS 游戏窗口">
+    <canvas id="unity-canvas" width="1280" height="720" tabindex="0"></canvas>
+    <div id="loading" role="status" aria-live="polite">
+      <strong>正在安全加载游戏 / Loading game / Cargando juego</strong>
+      <div id="bar"><div id="fill"></div></div>
+      <span id="status">首次打开需要下载游戏数据，请保持此页面开启。</span>
+    </div>
+    <div id="error">
+      <div id="error-card">
+        <h2>游戏没有成功加载</h2>
+        <p id="error-message"></p>
+        <p>若 Chrome 显示“由管理员阻止”或“危险网站”，这是学校设备的管理策略，不是游戏内错误。请把当前 HTTPS 地址交给学校管理员加入允许名单；不要关闭 Chromebook 的安全功能。</p>
+        <button type="button" onclick="location.reload()">重新加载</button>
       </div>
     </div>
-    <script>
-      var canvas = document.querySelector("#unity-canvas");
-
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Chromebook-Web.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/Chromebook-Web.data.unityweb",
-        frameworkUrl: buildUrl + "/Chromebook-Web.framework.js.unityweb",
-        codeUrl: buildUrl + "/Chromebook-Web.wasm.unityweb",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "ChickenFPS Chromebook",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
-
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
-      }
-
-      document.querySelector("#unity-loading-bar").style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-
-              }).catch((message) => {
-                alert(message);
-              });
-            };
-
-      document.body.appendChild(script);
-
-    </script>
-  </body>
+  </section>
+  <footer>
+    <p>操作：<kbd>WASD</kbd> 移动 · 鼠标瞄准 · <kbd>B</kbd> 商店 · <kbd>Esc</kbd> 菜单</p>
+    <p>语言可在登录页右上角或游戏“设置”中切换。</p>
+  </footer>
+</main>
+<script>
+  "use strict";
+  const canvas = document.getElementById("unity-canvas");
+  const loading = document.getElementById("loading");
+  const fill = document.getElementById("fill");
+  const status = document.getElementById("status");
+  const errorPanel = document.getElementById("error");
+  const errorMessage = document.getElementById("error-message");
+  const buildUrl = "Build";
+  const config = {
+    arguments: [],
+    dataUrl: buildUrl + "/Chromebook-Web.data.unityweb",
+    frameworkUrl: buildUrl + "/Chromebook-Web.framework.js.unityweb",
+    codeUrl: buildUrl + "/Chromebook-Web.wasm.unityweb",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "ChickenFPS Studio",
+    productName: "ChickenFPS Chromebook",
+    productVersion: "1.1",
+    matchWebGLToCanvasSize: true,
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+    showBanner(message, type) {
+      if (type === "error") showError(message);
+      else status.textContent = message;
+    }
+  };
+  function showError(message) {
+    loading.style.display = "none";
+    errorPanel.style.display = "grid";
+    errorMessage.textContent = String(message || "未知加载错误");
+  }
+  const loader = document.createElement("script");
+  loader.src = buildUrl + "/Chromebook-Web.loader.js";
+  loader.onload = () => {
+    createUnityInstance(canvas, config, progress => {
+      const percent = Math.round(progress * 100);
+      fill.style.width = percent + "%";
+      status.textContent = "正在加载 " + percent + "%";
+    }).then(instance => {
+      loading.style.display = "none";
+      canvas.focus();
+      window.chickenFPS = instance;
+    }).catch(showError);
+  };
+  loader.onerror = () => showError("游戏加载器被网络或学校过滤器阻止。请确认当前域名已被学校允许。");
+  document.head.appendChild(loader);
+  setTimeout(() => {
+    if (loading.style.display !== "none" && fill.style.width === "0%")
+      status.textContent = "仍在等待游戏文件；学校网络可能正在检查或阻止大型 WebGL 文件。";
+  }, 15000);
+</script>
+</body>
 </html>
